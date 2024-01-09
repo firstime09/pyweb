@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-import cv2
+import cv2 as cv
 
 def app():
     st.title('Leaf Diseases Detection')
@@ -14,11 +14,11 @@ def app():
 
     if uploaded_file is not None:
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-        opencv_img = cv2.imdecode(file_bytes, 1)
+        opencv_img = cv.imdecode(file_bytes, 1)
 
         st.image(
             opencv_img, caption="Uploaded Image.", use_column_width=True, channels="BGR"
         )
-        b,g,r = cv2.split(opencv_img)
+        b,g,r = cv.split(opencv_img)
         if st.button('Diseases Area'):
             st.image(g-r)
