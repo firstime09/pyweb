@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-import cv2 as cv
+import cv2
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
 
@@ -16,8 +16,8 @@ def app():
 
     if uploaded_file is not None:
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-        opencv_img = cv.imdecode(file_bytes, 1)
-        b,g,r = cv.split(opencv_img)
+        opencv_img = cv2.imdecode(file_bytes, 1)
+        b,g,r = cv2.split(opencv_img)
         gr = g-r
         # st.image([opencv_img, gr])
         st.image(opencv_img, caption="Uploaded Image.", channels="BGR")
