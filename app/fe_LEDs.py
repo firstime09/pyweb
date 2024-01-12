@@ -13,12 +13,13 @@ def app():
             about `Leaf Diseases Segmentation`.
         """)
     uploaded_file = st.file_uploader("Choose a file", type=["png", "jpg", "jpeg"])
-
+    col1, col2 = st.columns(2)
     if uploaded_file is not None:
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
         opencv_img = cv2.imdecode(file_bytes, 1)
         b,g,r = cv2.split(opencv_img)
         gr = g-r
         # st.image([opencv_img, gr])
-        st.image(opencv_img, caption="Uploaded Image.", channels="BGR")
-        st.image(gr, caption="Diseases Areas.")
+        col1.image(opencv_img, caption="Uploaded Image.", channels="BGR")
+        col2.image(gr, caption="Diseases Areas.")
+    
