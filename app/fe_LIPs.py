@@ -8,5 +8,5 @@ def app():
             can be read in my publication list on Google Scholar about
             `Link Phishing Detection`.
 
-        ### wait for the update... 
+        wait for the update... 
         """)
