@@ -1,8 +1,6 @@
 import streamlit as st
 import numpy as np
-import cv2
-
-MAX_FILE_SIZE = 5 * 1024 * 1024
+import cv2, pywt
 
 def app():
     st.title('Leaf Diseases Detection')
@@ -19,7 +17,9 @@ def app():
         opencv_img = cv2.imdecode(file_bytes, 1)
         b,g,r = cv2.split(opencv_img)
         gr = g-r
-        # st.image([opencv_img, gr])
+        hitdwt = pywt.dwt2(gr, "db2")
+        LL, (LH, HL, HH) = hitdwt
+        
         col1.image(opencv_img, caption="Uploaded Image.", channels="BGR")
         col2.image(gr, caption="Diseases Areas.")
     
