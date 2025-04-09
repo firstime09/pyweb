@@ -15,7 +15,7 @@ def app():
         ### Whare you can find me?
         - in my publication [Google scholar](https://scholar.google.com/citations?user=LxbIO5sAAAAJ)
         - in my code documentation [Github](https://github.com/firstime09)
-        - in my social media [LinkedIn](https://id.linkedin.com/in/felliks-feiters-tampinongkol-100084174)
+        - in my social media [LinkedIn](https://www.linkedin.com/in/fftampinongkol-100084174/)
         
         ### Under Maintenance...    
         """)
