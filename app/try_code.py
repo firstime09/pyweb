@@ -19,7 +19,8 @@ def app():
             can be read in my publication list on Google Scholar about
             `Link Phishing Detection`.
         """)
-    model = mf.allFunction.load_model('m00_rf_mean_acc87p.pkl')[2]
+    ##model = mf.allFunction.load_model('m00_rf_mean_acc87p.pkl')[2]
+    model = mf.allFunction.load_model('/content/m2_rf_mean_acc76p_withScale.pkl')[2]
 
     url_input = st.text_input('Input The link here 👇:')
     if st.button('Check Link'):
