@@ -1,5 +1,5 @@
 import numpy as np
-import pickle as pk
+import pickle, gzip
 import streamlit as st
 from urllib.parse import urlparse
 from sklearn.model_selection import train_test_split
@@ -12,8 +12,8 @@ class allFunction:
         return hit
     
     def load_model(in_model):
-        with open(in_model, 'rb') as md:
-            load_model = pk.load(md)
+        with gzip.open(in_model, 'rb') as md:
+            load_model = pickle.load(md)
         return load_model
 
     def clf_rf_class(dataX, dataY, tsize, rstate):
