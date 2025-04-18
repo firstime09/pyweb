@@ -5,5 +5,5 @@ numpy==1.26.4
 pytesseract
 nltk
 pandas
-scikit-learn==1.3.0
+scikit-learn==1.6.1
 PyWavelets
