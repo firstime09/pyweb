@@ -59,6 +59,6 @@ class allFunction:
         return digit_count / len(string)
     
     def output_link(in_model, url1):
-        if in_model == 0:
+        if in_model == 1:
             return(f'{url1}')
         return(f'link is phishing')
