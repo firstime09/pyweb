@@ -1,6 +1,6 @@
 import streamlit as st
 from multiapp import MultiApp
-from app import home, fe_LEDs, try_code
+from app import home, fe_LEDs, try_code, fe_webScraping
 
 st.set_page_config(page_title='| fftampinongkol', page_icon='👋')
 app = MultiApp()
