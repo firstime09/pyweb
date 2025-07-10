@@ -1,30 +1,48 @@
 import streamlit as st
-import requests
-from bs4 import BeautifulSoup
+from google_play_scraper import app as gplay_app, reviews
+import pandas as pd
 
 def app():
-    st.title("Product Info Scraper")
-    url = st.text_input("Enter product URL:", "https://example.com")
+    st.title("Google Play Store App Info + Reviews Downloader")
 
-    if st.button("Scrape"):
+    package_name = st.text_input(
+        "Enter app package name (e.g., com.whatsapp):",
+        "com.whatsapp")
+
+    review_count = st.number_input(
+        "Number of reviews to fetch:",
+        min_value=1,
+        max_value=1000,
+        value=10)
+
+    if st.button("Fetch App Data"):
         try:
-            response = requests.get(url, timeout=10)
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, "html.parser")
+            # Get app info
+            result = gplay_app(package_name)
 
-            # Contoh ambil data (ganti class sesuai halaman target)
-            product_name = soup.find("div", class_="product-title")
-            product_rating = soup.find("div", class_="product-rating")
-            product_price = soup.find("div", class_="product-price")
-            product_reviews = soup.find("div", class_="product-reviews")
-            purchase_timeline = soup.find("div", class_="purchase-timeline")
-            st.subheader("Scraped Data:")
+            st.subheader("App Information")
+            st.write("**App Name:**", result["title"])
+            st.write("**Rating:**", result["score"])
+            st.write("**Total Reviews:**", result["reviews"])
+            st.write("**Installs:**", result["installs"])
+            st.write("**Description:**", result["description"][:300] + "...")
 
-            st.write("**Product Name:**", product_name.get_text(strip=True) if product_name else "Not found")
-            st.write("**Rating:**", product_rating.get_text(strip=True) if product_rating else "Not found")
-            st.write("**Price:**", product_price.get_text(strip=True) if product_price else "Not found")
-            st.write("**Reviews:**", product_reviews.get_text(strip=True) if product_reviews else "Not found")
-            st.write("**Purchase Timeline:**", purchase_timeline.get_text(strip=True) if purchase_timeline else "Not found")
+            rvs, _ = reviews(
+                package_name,
+                lang='en',
+                country='us',
+                count=review_count)
+
+            df_reviews = pd.DataFrame(rvs)[["userName", "score", "content", "at"]]
+            st.subheader("Sample Reviews")
+            st.dataframe(df_reviews)
+
+            csv = df_reviews.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="Download reviews as CSV",
+                data=csv,
+                file_name=f"{package_name}_reviews.csv",
+                mime="text/csv")
 
         except Exception as e:
             st.error(f"Error: {e}")
