@@ -4,8 +4,6 @@ from bs4 import BeautifulSoup
 
 def app():
     st.title("Simple Web Scraping App")
-
-    # Input URL
     url = st.text_input("Enter a URL to scrape:", "https://example.com")
 
     # Button to start scraping
