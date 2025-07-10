@@ -42,8 +42,6 @@ def app():
             clean_reviews = []
             for rv in rvs:
                 clean_reviews.append({
-                    "lang": selected_lang,
-                    "country": selected_country,
                     "userName": rv.get("userName", ""),
                     "score": rv.get("score", ""),
                     "content": rv.get("content", ""),
