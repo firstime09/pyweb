@@ -36,7 +36,3 @@ def app():
                 st.write("No <h2> elements found.")
         except Exception as e:
             st.error(f"Error: {e}")
-
-# If you want to run it directly when executing the script:
-if __name__ == "__main__":
-    app()
