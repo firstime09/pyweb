@@ -7,3 +7,4 @@ nltk
 pandas
 scikit-learn==1.6.1
 PyWavelets
+beautifulsoup4
