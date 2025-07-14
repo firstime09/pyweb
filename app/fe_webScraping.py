@@ -26,7 +26,7 @@ def app():
     review_count = st.number_input(
         "Number of reviews to fetch (newest):",
         min_value=1,
-        max_value=1000,
+        max_value=99999,
         value=100)
 
     if st.button("Fetch App Data"):
