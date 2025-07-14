@@ -7,6 +7,7 @@ def app():
     package_name = st.text_input(
         "Enter app package name (e.g., com.whatsapp):",
         "com.whatsapp")
+
     lang_option = st.radio(
         "Select review language:",
         options=[
@@ -27,10 +28,6 @@ def app():
         min_value=1,
         max_value=1000,
         value=100)
-
-    st.subheader("Filter by review date")
-    start_date = st.date_input("Start date")
-    end_date = st.date_input("End date")
 
     if st.button("Fetch App Data"):
         try:
@@ -55,27 +52,15 @@ def app():
                     "at": rv.get("at", "")})
 
             df_reviews = pd.DataFrame(clean_reviews)
-            df_reviews["at"] = pd.to_datetime(df_reviews["at"])
-            mask = (df_reviews["at"].dt.date >= start_date) & (df_reviews["at"].dt.date <= end_date)
-            df_filtered = df_reviews.loc[mask]
+            st.subheader("Reviews")
+            st.dataframe(df_reviews)
+            st.write(f"Total reviews fetched: {len(df_reviews)}")
 
-            st.subheader("Filtered Reviews")
-            st.dataframe(df_filtered)
-            st.write(f"Total filtered reviews: {len(df_filtered)}")
-            
-            if not df_filtered.empty:
-                df_filtered["month"] = df_filtered["at"].dt.to_period("M").astype(str)
-                avg_rating_per_month = df_filtered.groupby("month")["score"].mean().reset_index()
-                st.subheader("Average Rating per Month")
-                st.bar_chart(
-                    data=avg_rating_per_month.set_index("month"))
-            else:
-                st.warning("No reviews in the selected date range to visualize.")
-            csv = df_filtered.to_csv(index=False).encode("utf-8")
+            csv = df_reviews.to_csv(index=False).encode("utf-8")
             st.download_button(
-                label="Download Filtered Reviews as CSV",
+                label="Download Reviews as CSV",
                 data=csv,
-                file_name=f"{package_name}_reviews_{selected_lang}_{selected_country}_{start_date}_{end_date}.csv",
+                file_name=f"{package_name}_reviews_{selected_lang}_{selected_country}.csv",
                 mime="text/csv")
 
         except Exception as e:
