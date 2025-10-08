@@ -5,22 +5,18 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from app import myfunction as mf
 
-# Load custom analysis function
 stockAnalytics = mf.allFunction.calc_levels_with_fair_value
 
 def app():
     st.title("📊 Advanced Stock Analysis: Support & Resistance Visualization")
-    st.markdown("""
-    This application demonstrates a **Support and Resistance**-based stock analysis with **volume confirmation**
+    st.markdown("""This application demonstrates a **Support and Resistance**-based stock analysis with **volume confirmation**
     and **fair value estimation**. The visualizations help identify **key price zones** where reversal or continuation signals often occur.
     """)
 
     # --- Input Section ---
     tickers = st.multiselect(
         "Select Stock Tickers:",
-        ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"],
-        default=["BBRI.JK"]
-    )
+        ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"], default=["BBRI.JK"])
 
     start_date = st.date_input("Start Date", value=pd.to_datetime("2025-08-08"))
     end_date = st.date_input("End Date", value=pd.to_datetime("2025-10-07"))
@@ -31,8 +27,6 @@ def app():
 
         results = pd.DataFrame({t: stockAnalytics(data[t]) for t in tickers}).T
         st.success("✅ Analysis Complete")
-
-        # --- Display Table ---
         st.subheader("📋 Support, Resistance & Fair Value Summary")
         st.dataframe(results[['Pivot', 'S1', 'R1', 'Fair_Buy', 'Fair_Sell', 'Trend_Signal']])
 
@@ -52,7 +46,7 @@ def app():
             fig, ax = plt.subplots(figsize=(10, 5))
 
             # Plot harga Close
-            ax.plot(df.index, df['Close'], color='black', linewidth=2, label='Close Price')
+            ax.plot(df.index, df['Open'], color='black', linewidth=2, label='Open Price')
 
             # Highlight Support (zona hijau) dan Resistance (zona merah)
             ax.add_patch(Rectangle((df.index[0], S1), width=len(df), height=Pivot - S1,
@@ -68,33 +62,28 @@ def app():
             # Garis harga wajar beli/jual
             ax.axhline(Fair_Buy, color='lime', linestyle='-.', linewidth=1.2, label=f'Fair Buy: {Fair_Buy:.2f}')
             ax.axhline(Fair_Sell, color='orange', linestyle='-.', linewidth=1.2, label=f'Fair Sell: {Fair_Sell:.2f}')
-
             ax.set_title(f"{t} — Support & Resistance Zones", fontsize=14)
             ax.set_ylabel("Price (IDR)")
             ax.legend(loc="upper left", fontsize=8)
             ax.grid(alpha=0.3)
 
-            # Volume pada sumbu kedua
             ax2 = ax.twinx()
             ax2.bar(df.index, df['Volume'], color='gray', alpha=0.2, label='Volume')
             ax2.set_ylabel("Volume")
             ax2.set_ylim(0, df['Volume'].max() * 4)
-
             st.pyplot(fig)
 
             # --- Interpretasi Otomatis ---
-            st.markdown(f"""
-            **Interpretation for {t}:**
+            st.markdown(f"""**Interpretation for {t}:**
             - Current Close Price: `{df['Close'][-1]:,.2f}`
             - Support Zone: `{S1:,.2f} - {Pivot:,.2f}` → *Potential Buy Area*
             - Resistance Zone: `{Pivot:,.2f} - {R1:,.2f}` → *Potential Sell/Profit Area*
             - Fair Buy: `{Fair_Buy:,.2f}`, Fair Sell: `{Fair_Sell:,.2f}`
-            - Trend Signal: **{results.loc[t, 'Trend_Signal']}**
-            """)
+            - Trend Signal: **{results.loc[t, 'Trend_Signal']}**""")
 
         st.markdown("---")
-        st.info("💡 *Tip:* Look for price consolidations near the support area with increasing volume — "
-                "this may indicate accumulation before a potential breakout.")
+        st.info("💡*Tip:* Look for price consolidations near the support area with increasing volume — "
+                "This may indicate accumulation before a potential breakout.")
 
 # Run locally
 if __name__ == "__main__":
