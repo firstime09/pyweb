@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pickle, gzip
 import streamlit as st
 from urllib.parse import urlparse
@@ -62,3 +63,33 @@ class allFunction:
         if in_model == 1:
             return(f'{url1}')
         return(f'link is phishing')
+
+    # Fungsi analisis lengkap: Support, Resistance, Volume, dan Harga Wajar ---- 08 Oktober 2025
+    def calc_levels_with_fair_value(df):
+        high = df['High'][-1]
+        low = df['Low'][-1]
+        close = df['Close'][-1]
+        pivot = (high + low + close) / 3
+        r1 = 2 * pivot - low
+        s1 = 2 * pivot - high
+        r2 = pivot + (high - low)
+        s2 = pivot - (high - low)
+        
+        # Volume
+        avg_vol = df['Volume'][-7:].mean()
+        curr_vol = df['Volume'][-1]
+        vol_ratio = curr_vol / avg_vol
+
+        # Sinyal tren
+        trend_strength = ("Bullish kuat" if (close > pivot and vol_ratio > 1)
+                          else "Bearish kuat" if (close < pivot and vol_ratio > 1)
+                          else "Netral")
+
+        # Harga wajar beli & jual (dengan bobot tergantung tren)
+        alpha = 0.6 if "Bearish" in trend_strength else 0.4
+        beta = 0.6 if "Bullish" in trend_strength else 0.4
+        fair_buy = pivot - alpha * (pivot - s1)
+        fair_sell = pivot + beta * (r1 - pivot)
+        
+        return pd.Series({'Pivot': pivot, 'R1': r1, 'S1': s1, 'R2': r2, 'S2': s2, 'Avg_Volume': avg_vol, 'Curr_Volume': curr_vol,
+                          'Vol_Ratio': vol_ratio, 'Trend_Signal': trend_strength, 'Fair_Buy': fair_buy, 'Fair_Sell': fair_sell})
