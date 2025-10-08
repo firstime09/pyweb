@@ -46,7 +46,7 @@ def app():
             fig, ax = plt.subplots(figsize=(10, 5))
 
             # Plot harga Close
-            ax.plot(df.index, df['Open'], color='black', linewidth=2, label='Open Price')
+            ax.plot(df.index, df['Close'], color='black', linewidth=2, label='Close Price')
 
             # Highlight Support (zona hijau) dan Resistance (zona merah)
             ax.add_patch(Rectangle((df.index[0], S1), width=len(df), height=Pivot - S1,
