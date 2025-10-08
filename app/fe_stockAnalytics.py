@@ -23,14 +23,15 @@ def app():
                              default=["BBRI.JK", "BBCA.JK"])
 
     start_date = st.date_input("Start Date", value=pd.to_datetime("2025-01-01"))
-    end_date = st.date_input("End Date", value=pd.to_datetime("2025-10-07"))
+    end_date = st.date_input("End Date", value=pd.to_datetime("2025-10-07"))        
 
     if st.button("🔍 Show MACD Chart"):
         st.info("Fetching data and calculating MACD...")
-
-        # Ambil data dari Yahoo Finance
         data = yf.download(tickers, start=start_date, end=end_date, group_by='ticker')
-        st.success("✅ Data retrieved successfully")
+        results = pd.DataFrame({t: stockAnalytics(data[t]) for t in tickers}).T
+        st.success("✅ Analysis Complete")
+        st.subheader("📋 Support, Resistance & Fair Value Summary")
+        st.dataframe(results[['Pivot', 'S1', 'R1', 'Fair_Buy', 'Fair_Sell', 'Trend_Signal']])
 
         for t in tickers:
             st.subheader(f"📈 {t} — MACD Indicator")
