@@ -9,8 +9,8 @@ def app():
         fair value estimation for buy/sell decisions — are thoroughly explained in my publication list and supporting materials available
         on Google Scholar under the topic “Stock Analysis Using Support and Resistance”.
         """)
-    cols = st.columns([1, 3])
+cols = st.columns([1, 3])
     
-    DEFAULT_STOCKS = ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"]
-    if "tickers_input" not in st.session_state:
-        st.session_state.tickers_input = st.query_params.get("stocks", ",".join(DEFAULT_STOCKS)).split(",")
+DEFAULT_STOCKS = ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"]
+if "tickers_input" not in st.session_state:
+    st.session_state.tickers_input = st.query_params.get("stocks", ",".join(DEFAULT_STOCKS)).split(",")
