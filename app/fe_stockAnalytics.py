@@ -1,8 +1,11 @@
 import streamlit as st
+import pandas as pd
 import yfinance as yf
 from app import myfunction as mf
 
-stockAnalytics = mf.calc_levels_with_fair_value
+stockAnalytics = mf.allFunction.calc_levels_with_fair_value
+tickers = ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"]
+data = yf.download(tickers, start="2025-08-08", end="2025-10-07", group_by='ticker')
 
 def app():
     st.title('Stock Analysis')
@@ -12,8 +15,7 @@ def app():
         fair value estimation for buy/sell decisions — are thoroughly explained in my publication list and supporting materials available
         on Google Scholar under the topic “Stock Analysis Using Support and Resistance”.
         """)
-cols = st.columns([1, 3])
-    
-DEFAULT_STOCKS = ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"]
-if "tickers_input" not in st.session_state:
-    st.session_state.tickers_input = st.query_params.get("stocks", ",".join(DEFAULT_STOCKS)).split(",")
+
+    results = pd.DataFrame({t: stockAnalytics(data[t]) for t in tickers}).T
+    print("\n=== SUPPORT, RESISTANCE, VOLUME & FAIR VALUE ANALYSIS ===")
+    print(results[['Pivot', 'S1', 'R1', 'Fair_Buy', 'Fair_Sell', 'Trend_Signal']])
