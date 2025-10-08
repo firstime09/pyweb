@@ -1,6 +1,8 @@
 import streamlit as st
 import yfinance as yf
 
+stockAnalytics = calc_levels_with_fair_value()
+
 def app():
     st.title('Stock Analysis')
     st.markdown(""" In this study, we develop a stock analysis model that utilizes the Support and Resistance approach to identify potential
