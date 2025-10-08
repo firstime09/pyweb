@@ -4,8 +4,6 @@ import yfinance as yf
 from app import myfunction as mf
 
 stockAnalytics = mf.allFunction.calc_levels_with_fair_value
-tickers = ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"]
-data = yf.download(tickers, start="2025-08-08", end="2025-10-07", group_by='ticker')
 
 def app():
     st.title('Stock Analysis')
@@ -16,6 +14,9 @@ def app():
         on Google Scholar under the topic “Stock Analysis Using Support and Resistance”.
         """)
 
+    tickers = ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"]
+    data = yf.download(tickers, start="2025-08-08", end="2025-10-07", group_by='ticker')
     results = pd.DataFrame({t: stockAnalytics(data[t]) for t in tickers}).T
+    
     print("\n=== SUPPORT, RESISTANCE, VOLUME & FAIR VALUE ANALYSIS ===")
     print(results[['Pivot', 'S1', 'R1', 'Fair_Buy', 'Fair_Sell', 'Trend_Signal']])
