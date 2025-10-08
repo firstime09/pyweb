@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
+from app import myfunction as mf
+
+stockAnalytics = mf.allFunction.calc_levels_with_fair_value
 
 def compute_macd(df, short_window=12, long_window=26, signal_window=9):
     df['EMA12'] = df['Close'].ewm(span=short_window, adjust=False).mean()
