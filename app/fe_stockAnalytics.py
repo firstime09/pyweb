@@ -1,7 +1,8 @@
 import streamlit as st
 import yfinance as yf
+from app import myfunction as mf
 
-stockAnalytics = calc_levels_with_fair_value()
+stockAnalytics = mf.calc_levels_with_fair_value
 
 def app():
     st.title('Stock Analysis')
