@@ -11,4 +11,5 @@ PyWavelets
 scikit-learn==1.6.1
 scipy
 textblob
-yfinance
+yfinance==0.2.40
+
