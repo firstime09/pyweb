@@ -31,7 +31,15 @@ def app():
     if st.button("🔍 Show MACD Chart"):
         st.info("Fetching data and calculating MACD...")
         data = yf.download(tickers, start=start_date, end=end_date, group_by='ticker')
-        results = pd.DataFrame({t: stockAnalytics(data[t]) for t in tickers}).T
+        results_dict = {}
+        for t in tickers:
+        # Pastikan data[t] tidak kosong sebelum diproses
+            if not data[t].empty:
+                res = stockAnalytics(data[t])
+                if res is not None: # Pastikan hasil fungsi tidak None
+                    results_dict[t] = res
+        results = pd.DataFrame(results_dict).T
+        # results = pd.DataFrame({t: stockAnalytics(data[t]) for t in tickers}).T
         st.success("✅ Analysis Complete")
         st.subheader("📋 Support, Resistance & Fair Value Summary")
         st.dataframe(results[['Pivot', 'S1', 'R1', 'Fair_Buy', 'Fair_Sell', 'Trend_Signal']])
