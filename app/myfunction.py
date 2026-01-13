@@ -66,6 +66,8 @@ class allFunction:
 
     # Fungsi analisis lengkap: Support, Resistance, Volume, dan Harga Wajar ---- 08 Oktober 2025
     def calc_levels_with_fair_value(df):
+        if df is None or df.empty:
+            return None
         high = df['High'].iloc[-1]
         low = df['Low'].iloc[-1]
         close = df['Close'].iloc[-1]
