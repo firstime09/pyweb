@@ -31,19 +31,7 @@ def app():
     if st.button("🔍 Show MACD Chart"):
         st.info("Fetching data and calculating MACD...")
         data = yf.download(tickers, start=start_date, end=end_date, group_by='ticker')
-        results_dict = {}
-        for t in tickers:
-            df_ticker = data.get(t) if isinstance(data, dict) else (data[t] if t in data else None)
-            if df_ticker is not None and not df_ticker.empty:
-                res = stockAnalytics(df_ticker)
-                if res is not None:
-                    results_dict[t] = res
-
-        if not results_dict:
-            st.error("Gagal melakukan analisis. Tidak ada data saham yang valid atau koneksi bermasalah.")
-            st.stop()
-        results = pd.DataFrame(results_dict).T
-        # results = pd.DataFrame({t: stockAnalytics(data[t]) for t in tickers}).T
+        results = pd.DataFrame({t: stockAnalytics(data[t]) for t in tickers}).T
         st.success("✅ Analysis Complete")
         st.subheader("📋 Support, Resistance & Fair Value Summary")
         st.dataframe(results[['Pivot', 'S1', 'R1', 'Fair_Buy', 'Fair_Sell', 'Trend_Signal']])
