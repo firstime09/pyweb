@@ -1,134 +1,169 @@
 import streamlit as st
 import pandas as pd
-import yfinance as yf
-import matplotlib.pyplot as plt
-from app import myfunction as mf
+import numpy as np
+import json
+from datetime import datetime
+from sklearn.naive_bayes import GaussianNB
+from sklearn.model_selection import LeaveOneOut
+from sklearn.metrics import accuracy_score
 
-stockAnalytics = mf.allFunction.calc_levels_with_fair_value
+# --- KONFIGURASI KELAS & DISTRIBUSI SINTETIS ---
+CLASS_NAMES = [
+    'Business Flash Visit', 'Leisure Planner', 'Last-Minute Bargain Hunter',
+    'Premium Spontaneous', 'Extended-Stay Value Seeker', 'Loyal Repeat Guest'
+]
 
-def compute_macd(df, short_window=12, long_window=26, signal_window=9):
-    df['EMA12'] = df['Close'].ewm(span=short_window, adjust=False).mean()
-    df['EMA26'] = df['Close'].ewm(span=long_window, adjust=False).mean()
-    df['MACD'] = df['EMA12'] - df['EMA26']
-    df['Signal_Line'] = df['MACD'].ewm(span=signal_window, adjust=False).mean()
-    df['MACD_Hist'] = df['MACD'] - df['Signal_Line']
-    return df
+# [LOS_mean, LOS_sd, BW_mean, BW_sd, ADR_mean, ADR_sd]
+SYNTH_CENTERS = [
+    [1.5, 0.5, 1.5, 1.0, 1100, 180],
+    [5.5, 1.5, 55, 18, 750, 150],
+    [2.0, 0.8, 1.0, 0.7, 480, 90],
+    [1.8, 0.7, 3.0, 2.0, 1900, 250],
+    [10.0, 2.5, 20, 7, 600, 110],
+    [3.8, 1.0, 17, 6, 950, 140],
+]
 
-def app():
-    st.title("📊 MACD Visualization for Stock Analysis")
-    st.markdown("""In this study, we develop a **stock analysis model** that utilizes the **Support and Resistance approach** to identify
-    potential entry and exit zones while confirming price movement strength through **volume analysis**. The methodology,
-    code implementation, and data processing details — including **historical price retrieval, pivot-based level computation (S1–R2),
-    Volume confirmation**, and **fair value estimation** for buy/sell decisions — are explained in my publication
-    *“Stock Analysis Using Support and Resistance”* (available on Google Scholar).""")
+# --- INISIALISASI SESSION STATE ---
+st.set_page_config(page_title="Guest Archetype Classifier", layout="wide")
+
+if 'samples' not in st.session_state:
+    st.session_state.samples = {name: [] for name in CLASS_NAMES}
+if 'model' not in st.session_state:
+    st.session_state.model = None
+if 'accuracy' not in st.session_state:
+    st.session_state.accuracy = None
+
+# Fungsi untuk generate data sintetis
+def generate_samples(class_idx, count=8):
+    lm, lsd, bm, bsd, am, asd = SYNTH_CENTERS[class_idx]
+    new_samples = []
+    for _ in range(count):
+        los = max(1, round(np.random.normal(lm, lsd)))
+        bw = max(0, round(np.random.normal(bm, bsd)))
+        adr = max(50, round(np.random.normal(am, asd)))
+        new_samples.append([los, bw, adr])
+    st.session_state.samples[CLASS_NAMES[class_idx]].extend(new_samples)
+
+# --- HEADER ---
+st.title("Guest Archetype Classifier")
+st.markdown("Latih klasifikasi tipe tamu langsung dari fitur LOS, Booking Window, dan ADR.")
+
+# --- LAYOUT 3 KOLOM ---
+col1, col2, col3 = st.columns(3)
+
+# ===================== PANEL 1: KUMPULKAN DATA =====================
+with col1:
+    st.header("1. Kumpulkan Data")
+    st.caption("Enam arketipe tamu dengan fitur numerik.")
     
-    tickers = st.multiselect("Select Stock Tickers:", ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK", "TLKM.JK", "ANTM.JK"],
-                             default=["BBRI.JK", "BBCA.JK"])
+    if st.button("🎲 Generate contoh data untuk semua kelas", use_container_width=True):
+        for i in range(len(CLASS_NAMES)):
+            generate_samples(i, 10)
+            
+    if st.button("Hapus semua sampel", use_container_width=True):
+        st.session_state.samples = {name: [] for name in CLASS_NAMES}
+        st.session_state.model = None
+        st.session_state.accuracy = None
 
-    start_date = st.date_input("Start Date", value=pd.to_datetime("2025-01-01"))
-    end_date = st.date_input("End Date", value=pd.to_datetime("2025-10-07"))        
+    for i, cls_name in enumerate(CLASS_NAMES):
+        with st.expander(f"{cls_name} ({len(st.session_state.samples[cls_name])} sampel)"):
+            if st.button(f"🎲 +8 sintetis", key=f"gen_{i}"):
+                generate_samples(i, 8)
+                st.rerun()
+            
+            df = pd.DataFrame(st.session_state.samples[cls_name], columns=["LOS", "BW", "ADR"])
+            if not df.empty:
+                st.dataframe(df, height=150)
 
-    if st.button("🔍 Show MACD Chart"):
-        st.info("Fetching data and calculating MACD...")
-        data = yf.download(tickers, start=start_date, end=end_date, group_by='ticker')
-        results = pd.DataFrame({t: stockAnalytics(data[t]) for t in tickers}).T
-        st.success("✅ Analysis Complete")
-        st.subheader("📋 Support, Resistance & Fair Value Summary")
-        st.dataframe(results[['Pivot', 'S1', 'R1', 'Fair_Buy', 'Fair_Sell', 'Trend_Signal']])
-
-        for t in tickers:
-            st.subheader(f"📈 {t} — MACD Indicator")
-            df = data[t].copy()
-            df = compute_macd(df)
-            fig, ax = plt.subplots(figsize=(10, 4))
-            ax.plot(df.index, df['MACD'], label='MACD', color='blue', linewidth=1.5)
-            ax.plot(df.index, df['Signal_Line'], label='Signal Line', color='red', linewidth=1.2)
-            ax.bar(df.index, df['MACD_Hist'],
-                   color=['green' if v >= 0 else 'red' for v in df['MACD_Hist']],
-                   alpha=0.4, label='Histogram')
-            ax.axhline(0, color='gray', linewidth=0.8)
-            ax.legend(loc="upper left", fontsize=8)
-            ax.set_title(f"{t} — MACD Momentum Indicator", fontsize=12)
-            ax.grid(alpha=0.3)
-            st.pyplot(fig)
-
-            latest_macd = df['MACD'].iloc[-1]
-            latest_signal = df['Signal_Line'].iloc[-1]
-            if latest_macd > latest_signal:
-                st.markdown("💹 **Buy Signal:** MACD crosses above the signal line (bullish momentum).")
-            elif latest_macd < latest_signal:
-                st.markdown("🔻 **Sell Signal:** MACD crosses below the signal line (bearish momentum).")
-            else:
-                st.markdown("⚖️ **Neutral:** No clear crossover detected.")
-
-# Jalankan aplikasi
-if __name__ == "__main__":
-    app()
-
-
-# import streamlit as st
-# import pandas as pd
-# import yfinance as yf
-# import matplotlib.pyplot as plt
-# from app import myfunction as mf
-
-# stockAnalytics = mf.allFunction.calc_levels_with_fair_value
-
-# def compute_macd(df, short_window=12, long_window=26, signal_window=9):
-#     df['EMA12'] = df['Close'].ewm(span=short_window, adjust=False).mean()
-#     df['EMA26'] = df['Close'].ewm(span=long_window, adjust=False).mean()
-#     df['MACD'] = df['EMA12'] - df['EMA26']
-#     df['Signal_Line'] = df['MACD'].ewm(span=signal_window, adjust=False).mean()
-#     df['MACD_Hist'] = df['MACD'] - df['Signal_Line']
-#     return df
-
-# def app():
-#     st.title("📊 MACD Visualization for Stock Analysis")
-#     st.markdown("""In this study, we develop a **stock analysis model** that utilizes the **Support and Resistance approach** to identify
-#     potential entry and exit zones while confirming price movement strength through **volume analysis**. The methodology,
-#     code implementation, and data processing details — including **historical price retrieval, pivot-based level computation (S1–R2),
-#     Volume confirmation**, and **fair value estimation** for buy/sell decisions — are explained in my publication
-#     *“Stock Analysis Using Support and Resistance”* (available on Google Scholar).""")
+# ===================== PANEL 2: LATIH MODEL =====================
+with col2:
+    st.header("2. Latih Model")
+    st.caption("Minimal 3 sampel per kelas. Akurasi dihitung lewat LOO-CV.")
     
-#     tickers = st.multiselect("Select Stock Tickers:", ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK", "TLKM.JK", "ANTM.JK"],
-#                              default=["BBRI.JK", "BBCA.JK"])
+    total_samples = sum(len(s) for s in st.session_state.samples.values())
+    ready_classes = sum(1 for s in st.session_state.samples.values() if len(s) >= 3)
+    
+    st.metric("Total Sampel", total_samples)
+    st.metric("Kelas Siap", f"{ready_classes} / 6")
+    
+    acc_text = f"{(st.session_state.accuracy * 100):.1f}%" if st.session_state.accuracy is not None else "–"
+    st.metric("Akurasi (LOO-CV)", acc_text)
+    
+    can_train = ready_classes == 6
+    if st.button("▶ Latih Model", disabled=not can_train, type="primary", use_container_width=True):
+        X, y = [], []
+        for cls_name, samples in st.session_state.samples.items():
+            for sample in samples:
+                X.append(sample)
+                y.append(cls_name)
+        
+        X = np.array(X)
+        y = np.array(y)
+        
+        # Cross-validation (LOO-CV)
+        loo = LeaveOneOut()
+        y_pred = []
+        model_cv = GaussianNB()
+        for train_index, test_index in loo.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            model_cv.fit(X_train, y_train)
+            y_pred.append(model_cv.predict(X_test)[0])
+            
+        st.session_state.accuracy = accuracy_score(y, y_pred)
+        
+        # Final Model fit on all data
+        final_model = GaussianNB()
+        final_model.fit(X, y)
+        st.session_state.model = final_model
+        st.rerun()
 
-#     start_date = st.date_input("Start Date", value=pd.to_datetime("2025-01-01"))
-#     end_date = st.date_input("End Date", value=pd.to_datetime("2025-10-07"))        
-
-#     if st.button("🔍 Show MACD Chart"):
-#         st.info("Fetching data and calculating MACD...")
-#         data = yf.download(tickers, start=start_date, end=end_date, group_by='ticker')
-#         results = pd.DataFrame({t: stockAnalytics(data[t]) for t in tickers}).T
-#         st.success("✅ Analysis Complete")
-#         st.subheader("📋 Support, Resistance & Fair Value Summary")
-#         st.dataframe(results[['Pivot', 'S1', 'R1', 'Fair_Buy', 'Fair_Sell', 'Trend_Signal']])
-
-#         for t in tickers:
-#             st.subheader(f"📈 {t} — MACD Indicator")
-#             df = data[t].copy()
-#             df = compute_macd(df)
-#             fig, ax = plt.subplots(figsize=(10, 4))
-#             ax.plot(df.index, df['MACD'], label='MACD', color='blue', linewidth=1.5)
-#             ax.plot(df.index, df['Signal_Line'], label='Signal Line', color='red', linewidth=1.2)
-#             ax.bar(df.index, df['MACD_Hist'],
-#                    color=['green' if v >= 0 else 'red' for v in df['MACD_Hist']],
-#                    alpha=0.4, label='Histogram')
-#             ax.axhline(0, color='gray', linewidth=0.8)
-#             ax.legend(loc="upper left", fontsize=8)
-#             ax.set_title(f"{t} — MACD Momentum Indicator", fontsize=12)
-#             ax.grid(alpha=0.3)
-#             st.pyplot(fig)
-
-#             latest_macd = df['MACD'].iloc[-1]
-#             latest_signal = df['Signal_Line'].iloc[-1]
-#             if latest_macd > latest_signal:
-#                 st.markdown("💹 **Buy Signal:** MACD crosses above the signal line (bullish momentum).")
-#             elif latest_macd < latest_signal:
-#                 st.markdown("🔻 **Sell Signal:** MACD crosses below the signal line (bearish momentum).")
-#             else:
-#                 st.markdown("⚖️ **Neutral:** No clear crossover detected.")
-
-# # Jalankan aplikasi
-# if __name__ == "__main__":
-#     app()
+# ===================== PANEL 3: UJI & EKSPOR =====================
+with col3:
+    st.header("3. Uji & Ekspor")
+    st.caption("Geser nilai fitur tamu baru dan lihat distribusi keyakinan model.")
+    
+    if st.session_state.model is None:
+        st.info("Latih model dulu di Panel 2 untuk mengaktifkan pengujian.")
+    else:
+        los_val = st.slider("Length of Stay (malam)", min_value=1, max_value=16, value=3, step=1)
+        bw_val = st.slider("Booking Window (hari)", min_value=0, max_value=100, value=14, step=1)
+        adr_val = st.slider("ADR (ribu / malam)", min_value=200, max_value=2500, value=800, step=10)
+        
+        # Prediksi
+        input_features = np.array([[los_val, bw_val, adr_val]])
+        probs = st.session_state.model.predict_proba(input_features)[0]
+        classes_order = st.session_state.model.classes_
+        
+        # Format probabilitas untuk ditampilkan
+        prob_df = pd.DataFrame({
+            'Arketipe': classes_order,
+            'Keyakinan (%)': np.round(probs * 100, 1)
+        }).sort_values(by='Keyakinan (%)', ascending=False)
+        
+        st.write("**Hasil Prediksi:**")
+        st.dataframe(prob_df, hide_index=True, use_container_width=True)
+        
+        # Logika Ekspor JSON
+        export_data = {
+            "exported_at": datetime.now().isoformat(),
+            "feature_order": ['length_of_stay', 'booking_window', 'adr'],
+            "classes": []
+        }
+        
+        for i, cls_name in enumerate(st.session_state.model.classes_):
+            export_data["classes"].append({
+                "name": cls_name,
+                "n_samples": int(np.sum(st.session_state.model.class_count_[i])),
+                "mean": st.session_state.model.theta_[i].tolist(),
+                "std": np.sqrt(st.session_state.model.var_[i]).tolist()
+            })
+            
+        json_str = json.dumps(export_data, indent=2)
+        st.download_button(
+            label="⬇ Ekspor model (.json)",
+            file_name="guest-archetype-model.json",
+            mime="application/json",
+            data=json_str,
+            use_container_width=True
+        )
