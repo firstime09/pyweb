@@ -37,12 +37,6 @@ def generate_samples(class_idx, count=8):
 
 
 def app():
-    # --- INISIALISASI SESSION STATE ---
-    # NOTE: st.set_page_config() sengaja TIDAK dipanggil di sini karena sudah
-    # dipanggil sekali di streamlit_app.py (root). Memanggilnya lagi di sini akan
-    # menyebabkan StreamlitAPIException, karena MultiApp.run() sudah menjalankan
-    # perintah Streamlit lain (st.sidebar.header/selectbox) sebelum app() ini
-    # dipanggil, dan set_page_config() wajib menjadi perintah Streamlit pertama.
     if 'samples' not in st.session_state:
         st.session_state.samples = {name: [] for name in CLASS_NAMES}
     if 'model' not in st.session_state:
